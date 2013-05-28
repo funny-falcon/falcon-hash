@@ -202,7 +202,7 @@ fh64s_step(uint64_t hash, const uint64_t block[4])
       v1 = (v1 * BC4) ^ (v2 * BC3);
       v3 = (v3 * BC1) + (v4 * BC2);
       hash = (ROTL64(v1, 29) * BC1) ^ (ROTL64(v3, 31) * BC6);
-      return hash + 1;
+      return hash;
 }
 
 void
