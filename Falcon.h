@@ -28,6 +28,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 
+void FalconHash64(const void *key, int len, uint32_t seed, void * out);
+void FalconHash64_0(const void *key, int len, uint32_t seed, void * out);
+void FalconHash64_1(const void *key, int len, uint32_t seed, void * out);
 void FalconHash128(const void *key, int len, uint32_t seed, void * out);
 void FalconHash128_0(const void *key, int len, uint32_t seed, void * out);
 void FalconHash128_1(const void *key, int len, uint32_t seed, void * out);
