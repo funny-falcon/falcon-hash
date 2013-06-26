@@ -211,9 +211,9 @@ static const uint32_t C2 = 0xab1e9755;
 static const uint32_t C3 = 0xb8b34b2b;
 static const uint32_t C4 = 0xa1e38b95;
 static const uint32_t C5 = 0xcc9e2d63;
-static const uint32_t C6 = 0x85ebcac1;
+static const uint32_t C6 = 0x85ebcacb;
 static const uint32_t C7 = 0xd56153af;
-static const uint32_t C8 = 0x9db2a9eb;
+static const uint32_t C8 = 0x942524b1;
 static const uint32_t C9 = 0xa7a3b46d;
 static const uint32_t CA = 0xe8293dbb;
 static const uint32_t CB = 0xa9d1ae7d;
@@ -269,6 +269,12 @@ tte(uint32_t h, uint32_t b0, uint32_t c, uint32_t b1, uint32_t d)
     return ((h ^ b0) * c) + (ROTL32(b1, 15) * d);
 }
 
+static inline uint32_t
+ttf(uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
+{
+    return ((h0 ^ ROTL32(b0, 15)) * c0) ^ ((h1 ^ ROTL32(b1, 15)) * c1);
+}
+
 static inline u64_t
 fh_step32(u64_t hash, const uint32_t block[8])
 {
@@ -276,21 +282,20 @@ fh_step32(u64_t hash, const uint32_t block[8])
       uint32_t va, vb, vc, vd;
       v1 = ttc(hash.h1, block[0], C1, block[1], C9);
       v2 = ttc(hash.h1, block[1], C2, block[2], CA);
-      v3 = ttc(hash.h1, block[2], C3, block[3], CB);
-      v4 = ttc(hash.h1, block[3], C4, block[4], CC);
+      v3 = ttc(hash.h2, block[2], C3, block[3], CB);
+      v4 = ttc(hash.h2, block[3], C4, block[4], CC);
       v5 = ttc(hash.h2, block[4], C5, block[5], CD);
       v6 = ttc(hash.h2, block[5], C6, block[6], CE);
-      v7 = ttc(hash.h2, block[6], C7, block[7], CF);
-      v8 = ttc(hash.h2, block[7], C8, block[0], C0);
+      v7 = ttc(hash.h1, block[6], C7, block[7], CF);
+      v8 = ttc(hash.h1, block[7], C8, block[0], C0);
       va = (v1 + v5);
       vb = (v2 + v6);
       vc = (v3 + v7);
       vd = (v4 + v8);
-      hash.h3 ^= ttd(vc, va, C6, vd, vb, C7);
-      hash.h3 = ROTL32(hash.h3, 5);
-      //hash.h2 = ttd(hash.h3 ^ vb, vc, C1, va, vd, C3);
-      hash.h2 = ttd(hash.h3 ^ vb, vc, C1, hash.h2 ^ va, vd, C3);
-      hash.h1 ^= ttd(hash.h2, hash.h3, C5, hash.h3, hash.h2, C8);
+      hash.h3 ^= ttb(vc, va, C6, vd, vb, C7);
+      hash.h3 = ROTL32(hash.h3, 7);
+      hash.h2 = ttb(hash.h3 ^ vb, vc, C1, hash.h2 ^ va, vd, C3);
+      hash.h1 ^= ttf(hash.h2, hash.h3, C5, hash.h3, hash.h2, C6);
       return hash;
 }
 
@@ -304,9 +309,8 @@ fh_step16(u64_t hash, const uint32_t block[4])
       v4 = tta(hash.h2, block[3], C4, block[0], C8);
       hash.h3 ^= ttb(v3, v1, C6, v4, v2, C7);
       hash.h3 = ROTL32(hash.h3, 7);
-      //hash.h2 = ttb(hash.h3 ^ v2, v3, C1, v1, v4, C3);
       hash.h2 = ttb(hash.h3 ^ v2, v3, C1, hash.h2 ^ v1, v4, C3);
-      hash.h1 ^= ttb(hash.h2, hash.h3, C5, 0, hash.h2, C8);
+      hash.h1 ^= ttf(hash.h2, hash.h3, C5, hash.h3, hash.h2, C6);
       return hash;
 }
 
@@ -314,13 +318,12 @@ static inline u64_t
 fh_step8(u64_t hash, const uint32_t block[2])
 {
       uint32_t v1, v2;
-      v1 = tte(hash.h1, block[0], C3, block[1], C5);
-      v2 = tte(hash.h2, block[1], C2, block[0], C8);
-      hash.h3 ^= tte(ROTL32(v1, 7), v2, C1, v1, C4);
+      v1 = tta(hash.h1, block[0], C1, block[1], C3);
+      v2 = tta(hash.h2, block[1], C2, block[0], C4);
+      hash.h3 ^= ttf(v1, v2, C6, v2, v1, C7);
       hash.h3 = ROTL32(hash.h3, 7);
-      //hash.h2 = tte(ROTL32(hash.h3, 15), v1, C6, hash.h2 ^ v2, C7);
-      hash.h2 = tte(ROTL32(hash.h3, 15), v1, C6, hash.h2 ^ v2, C7);
-      hash.h1 ^= ttt(hash.h2, 7, hash.h3, 0, C2, hash.h2, 16, C3);
+      hash.h2 = ttb(hash.h2, v1, C1, hash.h3, v2, C3);
+      hash.h1 ^= ttf(hash.h2, hash.h3, C5, hash.h3, hash.h2, C6);
       return hash;
 }
 
@@ -328,9 +331,9 @@ static inline u64_t
 fh_step4(u64_t hash, const uint32_t block[1])
 {
       hash.h3 ^= tta(hash.h1, block[0], C1, block[0], C3);
-      hash.h3 = ROTL32(hash.h3, 4);
+      hash.h3 = ROTL32(hash.h3, 7);
       hash.h2 = ttb(hash.h2, block[0], C2, block[0], hash.h3, C4);
-      hash.h1 ^= tta(hash.h2, hash.h3, C5, hash.h2, C6);
+      hash.h1 ^= ttf(hash.h2, hash.h3, C5, hash.h3, hash.h2, C6);
       return hash;
 }
 
@@ -376,8 +379,7 @@ FalconHash64(const void *key, int len, uint32_t seed, void * out)
         hash = fh_step32(hash, block);
         break;
     }
-        //hash = fh_step32(hash, block);
-    hash.h2 = ttdd(ROTL32(hash.h3, 5) ^ hash.h1, hash.h2, C1, hash.h2, hash.h1, C7);
+    hash.h2 = ttf(ROTL32(hash.h3, 5) ^ hash.h1, hash.h2, C2, hash.h2, hash.h1, C4);
     *(uint32_t*)out = hash.h1;
     *((uint32_t*)out+1) = hash.h2;
 }
@@ -400,10 +402,7 @@ FalconHash64_1(const void *key, int len, uint32_t seed, void * out)
 
 static const uint64_t BC1 = BIG_CONSTANT(0x87c37b911142559d);
 static const uint64_t BC2 = BIG_CONSTANT(0xacf5ad43274593b9);
-//static const uint64_t BC3 = BIG_CONSTANT(0xa951afd7ed558e95);
 static const uint64_t BC3 = BIG_CONSTANT(0xa951abd7ed558e35);
-//static const uint64_t BC4 = BIG_CONSTANT(0xc4ceb9fe1a85ed6b);
-//static const uint64_t BC4 = BIG_CONSTANT(0xc4aeb96e1a85ed4d);
 static const uint64_t BC4 = BIG_CONSTANT(0xc673b96e1a85ed39);
 static const uint64_t BC5 = BIG_CONSTANT(0xc3a5c85c97cb3199);
 static const uint64_t BC6 = BIG_CONSTANT(0xb492b66f5e98f273);
@@ -477,7 +476,6 @@ fh128_step64(u128_t hash, const uint64_t block[8])
       vd = (v4 + v8);
       hash.h3 ^= xxxb(vc, va, BC6, vd, vb, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
-      //hash.h2 = xxxb(hash.h3 ^ vb, vc, BC1, va, vd, BC3);
       hash.h2 = xxxb(hash.h3 ^ vb, vc, BC1, hash.h2 ^ va, vd, BC3);
       hash.h1 ^= xxxd(hash.h2, hash.h3, BC5, hash.h3, hash.h2, BC6);
       return hash;
@@ -493,7 +491,6 @@ fh128_step32(u128_t hash, const uint64_t block[4])
       v4 = xxxa(hash.h2, block[3], BC4, block[0], BC8);
       hash.h3 ^= xxxb(v3, v1, BC6, v4, v2, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
-      //hash.h2 = xxxb(hash.h3 ^ v2, v3, BC1, v1, v4, BC3);
       hash.h2 = xxxb(hash.h3 ^ v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
       hash.h1 ^= xxxd(hash.h2, hash.h3, BC5, hash.h3, hash.h2, BC6);
       return hash;
@@ -507,7 +504,6 @@ fh128_step16(u128_t hash, const uint64_t block[2])
       tmp.h2 = xxxa(hash.h2, block[1], BC3, block[0], BC4);
       hash.h3 ^= xxxd(tmp.h1, tmp.h2, BC6, tmp.h1, tmp.h2, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
-      //hash.h2 = xxxa(hash.h3, tmp.h1, BC1, tmp.h2, BC3);
       hash.h2 = xxxb(hash.h2, tmp.h1, BC1, hash.h3, tmp.h2, BC3);
       hash.h1 ^= xxxd(hash.h2, hash.h3, BC5, hash.h3, hash.h2, BC6);
       return hash;
