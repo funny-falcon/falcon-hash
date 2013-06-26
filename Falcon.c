@@ -246,30 +246,6 @@ ttb(uint32_t h, uint32_t b0, uint32_t c, uint32_t k, uint32_t b1, uint32_t d)
 }
 
 static inline uint32_t
-ttc(uint32_t h, uint32_t b0, uint32_t c, uint32_t b1, uint32_t d)
-{
-    return ((h ^ b0) * c) + (ROTL32(b1, 11) * d);
-}
-
-static inline uint32_t
-ttd(uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
-{
-    return ((h0 ^ ROTL32(b0, 9)) * c0) + ((h1 ^ ROTL32(b1, 9)) * c1);
-}
-
-static inline uint32_t
-ttdd(uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
-{
-    return ((h0 ^ ROTL32(b0, 9)) * c0) ^ ((h1 ^ ROTL32(b1, 9)) * c1);
-}
-
-static inline uint32_t
-tte(uint32_t h, uint32_t b0, uint32_t c, uint32_t b1, uint32_t d)
-{
-    return ((h ^ b0) * c) + (ROTL32(b1, 15) * d);
-}
-
-static inline uint32_t
 ttf(uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
 {
     return ((h0 ^ ROTL32(b0, 15)) * c0) ^ ((h1 ^ ROTL32(b1, 15)) * c1);
@@ -280,14 +256,14 @@ fh_step32(u64_t hash, const uint32_t block[8])
 {
       uint32_t v1, v2, v3, v4, v5, v6, v7, v8;
       uint32_t va, vb, vc, vd;
-      v1 = ttc(hash.h1, block[0], C1, block[1], C9);
-      v2 = ttc(hash.h1, block[1], C2, block[2], CA);
-      v3 = ttc(hash.h2, block[2], C3, block[3], CB);
-      v4 = ttc(hash.h2, block[3], C4, block[4], CC);
-      v5 = ttc(hash.h2, block[4], C5, block[5], CD);
-      v6 = ttc(hash.h2, block[5], C6, block[6], CE);
-      v7 = ttc(hash.h1, block[6], C7, block[7], CF);
-      v8 = ttc(hash.h1, block[7], C8, block[0], C0);
+      v1 = tta(hash.h1, block[0], C1, block[1], C9);
+      v2 = tta(hash.h1, block[1], C2, block[2], CA);
+      v3 = tta(hash.h2, block[2], C3, block[3], CB);
+      v4 = tta(hash.h2, block[3], C4, block[4], CC);
+      v5 = tta(hash.h2, block[4], C5, block[5], CD);
+      v6 = tta(hash.h2, block[5], C6, block[6], CE);
+      v7 = tta(hash.h1, block[6], C7, block[7], CF);
+      v8 = tta(hash.h1, block[7], C8, block[0], C0);
       va = (v1 + v5);
       vb = (v2 + v6);
       vc = (v3 + v7);
@@ -434,27 +410,9 @@ xxxb(uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c
 }
 
 static inline uint64_t
-xxxaa(uint64_t h, uint64_t b0, uint64_t c, uint64_t b1, uint64_t d)
-{
-    return ((h ^ b0) * c) + (ROTL64(b1, 29) * d);
-}
-
-static inline uint64_t
-xxxc(uint64_t h, uint64_t b0, uint64_t c, uint64_t b1, uint64_t d)
-{
-    return ((ROTL64(h, 15) ^ b0) * c) ^ (ROTL64(b1, 32) * d);
-}
-
-static inline uint64_t
 xxxd(uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c1)
 {
     return ((h0 ^ ROTL64(b0, 31)) * c0) ^ ((h1 ^ ROTL64(b1, 31)) * c1);
-}
-
-static inline uint64_t
-xxxe(uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t ca, uint64_t b1, uint64_t c1)
-{
-    return ((h0 ^ ROTL64(b0, 19)) * c0) ^ (h1 * ca + ROTL64(b1, 21) * c1);
 }
 
 static inline u128_t
