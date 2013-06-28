@@ -31,17 +31,16 @@ extern "C" {
 
 #include <stdint.h>
 
+void FalconHash64_x86(const void *key, int len, void *seed, void *out);
 void FalconHash64(const void *key, int len, uint32_t seed, void * out);
-void FalconHash64_0(const void *key, int len, uint32_t seed, void * out);
-void FalconHash64_1(const void *key, int len, uint32_t seed, void * out);
+void FalconHash64_32_fast(const void *key, int len, uint32_t seed, void * out);
+void FalconHash64_32_sec(const void *key, int len, uint32_t seed, void * out);
+void FalconHash128_x64(const void *key, int len, void *seed, void * out);
 void FalconHash128(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_A(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_B(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_0(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_1(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_2(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_3(const void *key, int len, uint32_t seed, void * out);
-void FalconHash128_02(const void *key, int len, uint32_t seed, void * out);
+void FalconHash128_64_fast(const void *key, int len, uint32_t seed, void * out);
+void FalconHash128_64_sec(const void *key, int len, uint32_t seed, void * out);
+void FalconHash128_32_fast(const void *key, int len, uint32_t seed, void * out);
+void FalconHash128_32_sec(const void *key, int len, uint32_t seed, void * out);
 
 #ifdef __cplusplus
 }

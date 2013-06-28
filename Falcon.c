@@ -293,8 +293,8 @@ fh_step4(u96_t hash, const uint32_t block[1])
       return hash;
 }
 
-static inline void
-_FalconHash64(const void *key, int len, void *seed, void *out)
+inline void
+FalconHash64_x86(const void *key, int len, void *seed, void *out)
 {
     u96_t hash = {
         ((uint32_t*)seed)[0],
@@ -350,24 +350,24 @@ void
 FalconHash64(const void *key, int len, uint32_t seed, void * out)
 {
     uint32_t seedx[3] = {seed, 0, 0};
-    _FalconHash64(key, len, seedx, out);
+    FalconHash64_x86(key, len, seedx, out);
 }
 
 void
-FalconHash64_0(const void *key, int len, uint32_t seed, void * out)
+FalconHash64_32_fast(const void *key, int len, uint32_t seed, void * out)
 {
     uint32_t seedx[3] = {seed, 0, 0};
     uint32_t hash[2];
-    _FalconHash64(key, len, seedx, &hash);
+    FalconHash64_x86(key, len, seedx, &hash);
     *(uint32_t*)out = hash[0];
 }
 
 void
-FalconHash64_1(const void *key, int len, uint32_t seed, void * out)
+FalconHash64_32_sec(const void *key, int len, uint32_t seed, void * out)
 {
     uint32_t seedx[3] = {seed, 0, 0};
     uint32_t hash[2];
-    _FalconHash64(key, len, seedx, &hash);
+    FalconHash64_x86(key, len, seedx, &hash);
     *(uint32_t*)out = hash[1];
 }
 
@@ -468,8 +468,8 @@ fh128_step8(u192_t hash, const uint64_t block[1])
       return hash;
 }
 
-static inline void
-_FalconHash128(const void *key, int len, void *seed, void *out)
+inline void
+FalconHash128_x64(const void *key, int len, void *seed, void *out)
 {
     u192_t hash = {
         ((uint64_t*)seed)[0],
@@ -520,68 +520,41 @@ void
 FalconHash128(const void *key, int len, uint32_t seed, void * out)
 {
     uint64_t seedx[3] = {seed, 0, 0};
-    _FalconHash128(key, len, seedx, out);
+    FalconHash128_x64(key, len, seedx, out);
 }
 
 void
-FalconHash128_A(const void *key, int len, uint32_t seed, void * out)
+FalconHash128_64_fast(const void *key, int len, uint32_t seed, void * out)
 {
     uint64_t seedx[3] = {seed, 0, 0};
     uint64_t hash[2];
-    _FalconHash128(key, len, seedx, &hash);
+    FalconHash128_x64(key, len, seedx, &hash);
     *(uint64_t*)out = hash[0];
 }
 
 void
-FalconHash128_B(const void *key, int len, uint32_t seed, void * out)
+FalconHash128_64_sec(const void *key, int len, uint32_t seed, void * out)
 {
     uint64_t seedx[3] = {seed, 0, 0};
     uint64_t hash[2];
-    _FalconHash128(key, len, seedx, &hash);
+    FalconHash128_x64(key, len, seedx, &hash);
     *(uint64_t*)out = hash[1];
 }
 
 void
-FalconHash128_0(const void *key, int len, uint32_t seed, void * out)
+FalconHash128_32_fast(const void *key, int len, uint32_t seed, void * out)
 {
     uint64_t seedx[3] = {seed, 0, 0};
     uint32_t hash[4];
-    _FalconHash128(key, len, seedx, &hash);
-    *(uint32_t*)out = hash[0];
-}
-
-void
-FalconHash128_1(const void *key, int len, uint32_t seed, void * out)
-{
-    uint64_t seedx[3] = {seed, 0, 0};
-    uint32_t hash[4];
-    _FalconHash128(key, len, seedx, &hash);
+    FalconHash128_x64(key, len, seedx, &hash);
     *(uint32_t*)out = hash[1];
 }
 
 void
-FalconHash128_2(const void *key, int len, uint32_t seed, void * out)
+FalconHash128_32_sec(const void *key, int len, uint32_t seed, void * out)
 {
     uint64_t seedx[3] = {seed, 0, 0};
     uint32_t hash[4];
-    _FalconHash128(key, len, seedx, &hash);
-    *(uint32_t*)out = hash[2];
-}
-
-void
-FalconHash128_3(const void *key, int len, uint32_t seed, void * out)
-{
-    uint64_t seedx[3] = {seed, 0, 0};
-    uint32_t hash[4];
-    _FalconHash128(key, len, seedx, &hash);
+    FalconHash128_x64(key, len, seedx, &hash);
     *(uint32_t*)out = hash[3];
-}
-
-void
-FalconHash128_02(const void *key, int len, uint32_t seed, void * out)
-{
-    uint64_t seedx[3] = {seed, 0, 0};
-    uint32_t hash[4];
-    _FalconHash128(key, len, seedx, &hash);
-    *(uint32_t*)out = hash[0] ^ hash[2];
 }
