@@ -1,7 +1,7 @@
 FalconHash
 ===========
 
-Attepmpt to make relatively safe (safer than MurmurHash3) and relatively fast (faster than SipHash on x86 and x86_64)
+Attepmpt to make relatively safe (safer than MurmurHash3) and relatively fast (faster than SipHash on x86 and x86\_64)
 hash function.
 
 Main weakness of MurmurHash3 (and CityHash) is existance of hash collisions which are independant of starting seed.
@@ -27,9 +27,9 @@ Comparisons of speed against **SipHash-1-3** *(x faster)*
 | Platform and message | FalconHash64 | FalconHash128\_64\_fast | FalconHash128 |
 |----------------------|-------------:|----------------------:|--------------:|
 | x86 <= 8bytes        |         1.5  |                 0.7   |         0.7   |
-| x86 long messages    |         3.0  |                 1.4   |         1.4   |
+| x86 long messages    |         3.0  |                 1.7   |         1.7   |
 | x86_64 <= 8bytes     |         1.0  |                 1.2   |         1.1   |
-| x86_64 long messages |         0.7  |                 1.4   |         1.4   |
+| x86_64 long messages |         0.7  |                 1.3   |         1.3   |
 
 
 Comparisons of speed against **SipHash-2-4** *(x faster)*
@@ -39,7 +39,7 @@ Comparisons of speed against **SipHash-2-4** *(x faster)*
 | x86 <= 8bytes        |         2.1  |                 1.0   |         1.0   |
 | x86 long messages    |         4.0  |                 2.0   |         2.0   |
 | x86_64 <= 8bytes     |         1.3  |                 1.3   |         1.2   |
-| x86_64 long messages |         1.4  |                 2.7   |         2.7   |
+| x86_64 long messages |         1.3  |                 2.5   |         2.5   |
 
 Disclaimer
 ==========

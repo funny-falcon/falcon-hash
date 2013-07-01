@@ -240,18 +240,14 @@ fh_step32(u96_t hash, const uint32_t block[8])
 {
       uint32_t va, vb, vc, vd, ve, vf, vg, vh;
       uint32_t v1, v2, v3, v4;
-      va = tta(hash.h1, block[0], C1, block[1], C9);
-      vb = tta(hash.h1, block[1], C2, block[2], CA);
-      vc = tta(hash.h2, block[2], C3, block[3], CB);
-      vd = tta(hash.h2, block[3], C4, block[4], CC);
-      ve = tta(hash.h2, block[4], C5, block[5], CD);
-      vf = tta(hash.h1, block[5], C6, block[6], CE);
-      vg = tta(hash.h2, block[6], C7, block[7], CF);
-      vh = tta(hash.h1, block[7], C8, block[0], C0);
-      v1 = (va + ve);
-      v2 = (vb + vg);
-      v3 = (vc + vf);
-      v4 = (vd + vh);
+      va = tta(hash.h1, block[0], C1, block[1], C5);
+      vb = tta(hash.h1, block[1], C2, block[2], C6);
+      vc = tta(hash.h2, block[2], C3, block[3], C7);
+      vd = tta(hash.h2, block[3], C4, block[4], C8);
+      v1 = ttd(block[4], vd, C9, vc, block[5], CD);
+      v2 = ttd(block[5], va, CA, vd, block[6], CE);
+      v3 = ttd(block[6], vb, CB, va, block[7], CF);
+      v4 = ttd(block[7], vc, CC, vb, block[0], C0);
       hash.h3 ^= ttd(v3, v1, C6, v4, v2, C7);
       hash.h3 = ROTL32(hash.h3, 7);
       hash.h2 = ttd(hash.h3 ^ v2, v3, C1, hash.h2 ^ v1, v4, C3);
@@ -308,7 +304,6 @@ FalconHash64_x86(const void *key, int len, void *seed, void *out)
     if (len == 0) {
         i = sizeof(block[0]);
         block[0] = C1;
-        hash.h1 += i; hash.h2 -= i;
         goto zero;
     }
     while(cnt--) {
@@ -419,14 +414,10 @@ fh128_step64(u192_t hash, const uint64_t block[8])
       vb = xxxa(hash.h1, block[1], BC2, block[2], BC6);
       vc = xxxa(hash.h2, block[2], BC3, block[3], BC7);
       vd = xxxa(hash.h2, block[3], BC4, block[4], BC8);
-      ve = xxxa(hash.h2, block[4], BC9, block[5], BCD);
-      vf = xxxa(hash.h1, block[5], BCA, block[6], BCE);
-      vg = xxxa(hash.h2, block[6], BCB, block[7], BCF);
-      vh = xxxa(hash.h1, block[7], BCC, block[0], BC0);
-      v1 = (va + ve);
-      v2 = (vb + vg);
-      v3 = (vc + vf);
-      v4 = (vd + vh);
+      v1 = xxxd(block[4], vd, BC9, vc, block[5], BCD);
+      v2 = xxxd(block[5], va, BCA, vd, block[6], BCE);
+      v3 = xxxd(block[6], vb, BCB, va, block[7], BCF);
+      v4 = xxxd(block[7], vc, BCC, vb, block[0], BC0);
       hash.h3 ^= xxxd(v3, v1, BC6, v4, v2, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
       hash.h2 = xxxd(hash.h3 ^ v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
@@ -481,7 +472,6 @@ FalconHash128_x64(const void *key, int len, void *seed, void *out)
     const uint64_t *chunk = (const uint64_t*)key;
     uint64_t block[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     if (len == 0) {
-        hash.h1 += 8; hash.h2 -= 8;
         block[0] = BC1;
         hash = fh128_step8(hash, block);
         goto zero;
