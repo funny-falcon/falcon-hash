@@ -224,9 +224,27 @@ tta(uint32_t h, uint32_t b0, uint32_t c, uint32_t b1, uint32_t d)
 }
 
 static inline uint32_t
+ttc(uint32_t h, uint32_t b0, uint32_t c, uint32_t h1, uint32_t b1, uint32_t d)
+{
+    return ((h ^ b0) * c) + ((h1 ^ ROTL32(b1, 16)) * d);
+}
+
+static inline uint32_t
+ttb(uint32_t h0, uint32_t b0, uint32_t c, uint32_t h1, uint32_t b1, uint32_t d)
+{
+    return ((h0 ^ ROTL32(b0, 15)) * c) + ((h1 ^ ROTL32(b1, 16)) * d);
+}
+
+static inline uint32_t
 ttd(uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
 {
     return ((h0 ^ ROTL32(b0, 15)) * c0) ^ ((h1 ^ ROTL32(b1, 16)) * c1);
+}
+
+static inline uint32_t
+tte(uint32_t k0, uint32_t h0, uint32_t b0, uint32_t c0, uint32_t h1, uint32_t b1, uint32_t c1)
+{
+    return ((k0 ^ ROTL32(h0, 5) ^ ROTL32(b0, 15)) * c0) ^ ((h1 ^ ROTL32(b1, 16)) * c1);
 }
 
 static inline uint32_t
@@ -240,17 +258,17 @@ fh_step32(u96_t hash, const uint32_t block[8])
 {
       uint32_t va, vb, vc, vd, ve, vf, vg, vh;
       uint32_t v1, v2, v3, v4;
-      va = tta(hash.h1, block[0], C1, block[1], C5);
-      vb = tta(hash.h1, block[1], C2, block[2], C6);
+      va = tta(hash.h3, block[0], C1, block[1], C5);
+      vb = tta(hash.h3, block[1], C2, block[2], C6);
       vc = tta(hash.h2, block[2], C3, block[3], C7);
       vd = tta(hash.h2, block[3], C4, block[4], C8);
-      v1 = ttd(block[4], vd, C9, vc, block[5], CD);
-      v2 = ttd(block[5], va, CA, vd, block[6], CE);
-      v3 = ttd(block[6], vb, CB, va, block[7], CF);
-      v4 = ttd(block[7], vc, CC, vb, block[0], C0);
-      hash.h3 ^= ttd(v3, v1, C6, v4, v2, C7);
+      v1 = ttb(block[4], hash.h1 ^ va, C9, vc, block[5], CD);
+      v2 = ttb(block[5], vd, CA, va, block[6], CE);
+      v3 = ttb(block[6], vb, CB, vd, block[7], CF);
+      v4 = ttb(block[7], hash.h1 ^ vc, CC, vb, block[0], C0);
+      hash.h3 = ttd(v3, v1, C6, hash.h3 ^ v4, v2, C7);
       hash.h3 = ROTL32(hash.h3, 7);
-      hash.h2 = ttd(hash.h3 ^ v2, v3, C1, hash.h2 ^ v1, v4, C3);
+      hash.h2 = tte(hash.h3, v2, v3, CC, hash.h2 ^ v1, v4, C0);
       return hash;
 }
 
@@ -262,9 +280,9 @@ fh_step16(u96_t hash, const uint32_t block[4])
       v2 = tta(hash.h1, block[1], C2, block[2], C6);
       v3 = tta(hash.h2, block[2], C3, block[3], C7);
       v4 = tta(hash.h2, block[3], C4, block[0], C8);
-      hash.h3 ^= ttd(v3, v1, C6, v4, v2, C7);
+      hash.h3 = ttd(v3, v1, C6, hash.h3 ^ v4, v2, C7);
       hash.h3 = ROTL32(hash.h3, 7);
-      hash.h2 = ttd(hash.h3 ^ v2, v3, C1, hash.h2 ^ v1, v4, C3);
+      hash.h2 = tte(hash.h3, v2, v3, C4, hash.h2 ^ v1, v4, C8);
       return hash;
 }
 
@@ -274,7 +292,7 @@ fh_step8(u96_t hash, const uint32_t block[2])
       uint32_t v1, v2;
       v1 = tta(hash.h1, block[0], C1, block[1], C3);
       v2 = tta(hash.h2, block[1], C2, block[0], C4);
-      hash.h3 ^= ttd(v1, v2, C6, v2, v1, C7);
+      hash.h3 = ttd(hash.h3 ^ v1, v2, C6, v2, v1, C8);
       hash.h3 = ROTL32(hash.h3, 7);
       hash.h2 = ttd(hash.h2, v1, C1, hash.h3, v2, C3);
       return hash;
@@ -283,7 +301,7 @@ fh_step8(u96_t hash, const uint32_t block[2])
 static inline u96_t
 fh_step4(u96_t hash, const uint32_t block[1])
 {
-      hash.h3 ^= tta(hash.h1, block[0], C1, block[0], C3);
+      hash.h3 = ttc(hash.h1, block[0], C1, hash.h3, block[0], C3);
       hash.h3 = ROTL32(hash.h3, 7);
       hash.h2 = ttd(hash.h2, block[0], C2, block[0], hash.h3, C4);
       return hash;
@@ -344,14 +362,14 @@ zero:
 void
 FalconHash64(const void *key, int len, uint32_t seed, void * out)
 {
-    uint32_t seedx[3] = {seed, 0, 0};
+    uint32_t seedx[3] = {0, 0, seed};
     FalconHash64_x86(key, len, seedx, out);
 }
 
 void
 FalconHash64_32_fast(const void *key, int len, uint32_t seed, void * out)
 {
-    uint32_t seedx[3] = {seed, 0, 0};
+    uint32_t seedx[3] = {0, 0, seed};
     uint32_t hash[2];
     FalconHash64_x86(key, len, seedx, &hash);
     *(uint32_t*)out = hash[0];
@@ -360,7 +378,7 @@ FalconHash64_32_fast(const void *key, int len, uint32_t seed, void * out)
 void
 FalconHash64_32_sec(const void *key, int len, uint32_t seed, void * out)
 {
-    uint32_t seedx[3] = {seed, 0, 0};
+    uint32_t seedx[3] = {0, 0, seed};
     uint32_t hash[2];
     FalconHash64_x86(key, len, seedx, &hash);
     *(uint32_t*)out = hash[1];
@@ -394,15 +412,33 @@ xxxa(uint64_t h, uint64_t b0, uint64_t c, uint64_t b1, uint64_t d)
 }
 
 static inline uint64_t
+xxxc(uint64_t h, uint64_t b0, uint64_t c, uint64_t h1, uint64_t b1, uint64_t d)
+{
+    return ((h ^ b0) * c) + ((h1 ^ ROTL64(b1, 32)) * d);
+}
+
+static inline uint64_t
+xxxb(uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c1)
+{
+    return ((h0 ^ ROTL64(b0, 31)) * c0) + ((h1 ^ ROTL64(b1, 32)) * c1);
+}
+
+static inline uint64_t
 xxxd(uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c1)
 {
     return ((h0 ^ ROTL64(b0, 31)) * c0) ^ ((h1 ^ ROTL64(b1, 32)) * c1);
 }
 
 static inline uint64_t
+xxxe(uint64_t k0, uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c1)
+{
+    return ((k0 ^ ROTL64(h0, 7) ^ ROTL64(b0, 31)) * c0) ^ ((h1 ^ ROTL64(b1, 32)) * c1);
+}
+
+static inline uint64_t
 xxxf(uint64_t k0, uint64_t h0, uint64_t b0, uint64_t c0, uint64_t h1, uint64_t b1, uint64_t c1)
 {
-    return ((k0 ^ ROTL64(h0, 2) ^ ROTL64(b0, 31)) * c0) ^ ((h1 ^ ROTL64(b1, 32)) * c1);
+    return ((k0 ^ ROTL64(h0, 4) ^ ROTL64(b0, 31)) * c0) ^ ((h1 ^ ROTL64(b1, 32)) * c1);
 }
 
 static inline u192_t
@@ -410,17 +446,17 @@ fh128_step64(u192_t hash, const uint64_t block[8])
 {
       uint64_t va, vb, vc, vd, ve, vf, vg, vh;
       uint64_t v1, v2, v3, v4;
-      va = xxxa(hash.h1, block[0], BC1, block[1], BC5);
-      vb = xxxa(hash.h1, block[1], BC2, block[2], BC6);
+      va = xxxa(hash.h3, block[0], BC1, block[1], BC5);
+      vb = xxxa(hash.h3, block[1], BC2, block[2], BC6);
       vc = xxxa(hash.h2, block[2], BC3, block[3], BC7);
       vd = xxxa(hash.h2, block[3], BC4, block[4], BC8);
-      v1 = xxxd(block[4], vd, BC9, vc, block[5], BCD);
-      v2 = xxxd(block[5], va, BCA, vd, block[6], BCE);
-      v3 = xxxd(block[6], vb, BCB, va, block[7], BCF);
-      v4 = xxxd(block[7], vc, BCC, vb, block[0], BC0);
-      hash.h3 ^= xxxd(v3, v1, BC6, v4, v2, BC7);
+      v1 = xxxb(block[4], hash.h1 ^ va, BC9, vc, block[5], BCD);
+      v2 = xxxb(block[5], vd, BCA, va, block[6], BCE);
+      v3 = xxxb(block[6], vb, BCB, vd, block[7], BCF);
+      v4 = xxxb(block[7], hash.h1 ^ vc, BCC, vb, block[0], BC0);
+      hash.h3 = xxxd(v3, v1, BC6, hash.h3 ^ v4, v2, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
-      hash.h2 = xxxd(hash.h3 ^ v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
+      hash.h2 = xxxe(hash.h3, v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
       return hash;
 }
 
@@ -432,9 +468,9 @@ fh128_step32(u192_t hash, const uint64_t block[4])
       v2 = xxxa(hash.h1, block[1], BC2, block[2], BC6);
       v3 = xxxa(hash.h2, block[2], BC3, block[3], BC7);
       v4 = xxxa(hash.h2, block[3], BC4, block[0], BC8);
-      hash.h3 ^= xxxd(v3, v1, BC6, v4, v2, BC7);
+      hash.h3 = xxxd(v3, v1, BC6, hash.h3 ^ v4, v2, BC7);
       hash.h3 = ROTL64(hash.h3, 9);
-      hash.h2 = xxxd(hash.h3 ^ v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
+      hash.h2 = xxxe(hash.h3, v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
       return hash;
 }
 
@@ -444,7 +480,7 @@ fh128_step16(u192_t hash, const uint64_t block[2])
       uint64_t v1, v2;
       v1 = xxxa(hash.h1, block[0], BC1, block[1], BC2);
       v2 = xxxa(hash.h2, block[1], BC3, block[0], BC4);
-      hash.h3 ^= xxxd(v1, v2, BC6, v2, v1, BC7);
+      hash.h3 = xxxd(hash.h3 ^ v1, v2, BC6, v2, v1, BC8);
       hash.h3 = ROTL64(hash.h3, 9);
       hash.h2 = xxxd(hash.h2, v1, BC1, hash.h3, v2, BC3);
       return hash;
@@ -453,7 +489,7 @@ fh128_step16(u192_t hash, const uint64_t block[2])
 static inline u192_t
 fh128_step8(u192_t hash, const uint64_t block[1])
 {
-      hash.h3 ^= xxxa(hash.h1, block[0], BC1, block[0], BC3);
+      hash.h3 = xxxc(hash.h1, block[0], BC1, hash.h3, block[0], BC3);
       hash.h3 = ROTL64(hash.h3, 9);
       hash.h2 = xxxd(hash.h2, block[0], BC2, block[0], hash.h3, BC4);
       return hash;
@@ -509,14 +545,14 @@ zero:
 void
 FalconHash128(const void *key, int len, uint32_t seed, void * out)
 {
-    uint64_t seedx[3] = {seed, 0, 0};
+    uint64_t seedx[3] = {0, 0, seed};
     FalconHash128_x64(key, len, seedx, out);
 }
 
 void
 FalconHash128_64_fast(const void *key, int len, uint32_t seed, void * out)
 {
-    uint64_t seedx[3] = {seed, 0, 0};
+    uint64_t seedx[3] = {0, 0, seed};
     uint64_t hash[2];
     FalconHash128_x64(key, len, seedx, &hash);
     *(uint64_t*)out = hash[0];
@@ -525,7 +561,7 @@ FalconHash128_64_fast(const void *key, int len, uint32_t seed, void * out)
 void
 FalconHash128_64_sec(const void *key, int len, uint32_t seed, void * out)
 {
-    uint64_t seedx[3] = {seed, 0, 0};
+    uint64_t seedx[3] = {0, 0, seed};
     uint64_t hash[2];
     FalconHash128_x64(key, len, seedx, &hash);
     *(uint64_t*)out = hash[1];
