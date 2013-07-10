@@ -292,7 +292,7 @@ fh_step8(u96_t hash, const uint32_t block[2])
       uint32_t v1, v2;
       v1 = tta(hash.h1, block[0], C1, block[1], C3);
       v2 = tta(hash.h2, block[1], C2, block[0], C4);
-      hash.h3 = ttd(hash.h3 ^ v1, v2, C6, v2, v1, C8);
+      hash.h3 = ttd(hash.h3 ^ v1, v2, C7, v2, v1, C8);
       hash.h3 = ROTL32(hash.h3, 7);
       hash.h2 = ttd(hash.h2, v1, C1, hash.h3, v2, C3);
       return hash;
@@ -390,7 +390,7 @@ static const uint64_t BC3 = BIG_CONSTANT(0xa951abd7ed558e35);
 static const uint64_t BC4 = BIG_CONSTANT(0xc673b96e1a85ed39);
 static const uint64_t BC5 = BIG_CONSTANT(0xc3a5c85c97cb3199);
 static const uint64_t BC6 = BIG_CONSTANT(0xb492b66f5e98f273);
-static const uint64_t BC7 = BIG_CONSTANT(0x9ae16a3b2d8542ab);
+static const uint64_t BC7 = BIG_CONSTANT(0x9ae16a3b2d853d67);
 static const uint64_t BC8 = BIG_CONSTANT(0xc9d64a2ae57b2457);
 static const uint64_t BC9 = BIG_CONSTANT(0x6789ab5de12356bd);
 static const uint64_t BCA = BIG_CONSTANT(0x7ab98cd21ef34ac5);
@@ -480,7 +480,7 @@ fh128_step16(u192_t hash, const uint64_t block[2])
       uint64_t v1, v2;
       v1 = xxxa(hash.h1, block[0], BC1, block[1], BC2);
       v2 = xxxa(hash.h2, block[1], BC3, block[0], BC4);
-      hash.h3 = xxxd(hash.h3 ^ v1, v2, BC6, v2, v1, BC8);
+      hash.h3 = xxxd(hash.h3 ^ v1, v2, BC7, v2, v1, BC8);
       hash.h3 = ROTL64(hash.h3, 9);
       hash.h2 = xxxd(hash.h2, v1, BC1, hash.h3, v2, BC3);
       return hash;
