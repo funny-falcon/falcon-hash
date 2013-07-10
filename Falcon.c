@@ -353,8 +353,8 @@ zero:
         hash = fh_step32(hash, block);
         break;
     }
-    hash.h1 = ttf(hash.h1, ~hash.h2, hash.h3, C5, hash.h3, hash.h2, C6);
-    hash.h2 = ttf(hash.h3, hash.h1, hash.h2, C2, hash.h2, hash.h1, C4);
+    hash.h1 = ttf(hash.h1, ~hash.h2, hash.h3, CB, hash.h3, hash.h2, CA);
+    hash.h2 = ttf(hash.h3, hash.h1, hash.h2, CF, hash.h2, hash.h1, CE);
     *(uint32_t*)out = hash.h1;
     *((uint32_t*)out+1) = hash.h2;
 }
@@ -536,8 +536,8 @@ FalconHash128_x64(const void *key, int len, void *seed, void *out)
         hash = fh128_step64(hash, block);
     }
 zero:
-    hash.h1 = xxxf(hash.h1, ~hash.h2, hash.h3, BC5, hash.h3, hash.h2, BC6);
-    hash.h2 = xxxf(hash.h3, hash.h1, hash.h2, BC2, hash.h2, hash.h1, BC4);
+    hash.h1 = xxxf(hash.h1, ~hash.h2, hash.h3, BCA, hash.h3, hash.h2, BCB);
+    hash.h2 = xxxf(hash.h3, hash.h1, hash.h2, BCE, hash.h2, hash.h1, BCF);
     *(uint64_t*)out = hash.h1;
     *((uint64_t*)out+1) = hash.h2;
 }
