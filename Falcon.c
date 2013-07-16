@@ -457,12 +457,12 @@ fh128_step64(u192_t hash, const uint64_t block[8])
       vc = xxxa(hash.h2, block[2], BC3, block[3], BC7);
       vd = xxxa(hash.h2, block[3], BC4, block[4], BC8);
       v1 = xxxb(block[4], hash.h1 ^ va, BC9, vd, block[5], BCD);
-      v2 = xxxb(block[5], vb, BCA, va, block[6], BCE);
+      v2 = xxxb(hash.h1 ^ block[5], vb, BCA, va, block[6], BCE);
       v3 = xxxb(block[6], vc, BCB, vb, block[7], BCF);
-      v4 = xxxb(block[7], hash.h1 ^ vd, BCC, vc, block[0], BC0);
+      v4 = xxxb(block[7], vd, BCC, vc, block[0], BC0);
       hash.h3 = xxxd(v3, v1, BC6, hash.h3 ^ v4, v2, BC7);
-      hash.h3 = ROTL64(hash.h3, 8);
-      hash.h1 = ((v1 + v2 + ROTL64(hash.h1, 16)) * BC5) ^ ((v3 + v4 + hash.h3) * BC8);
+      hash.h3 = ROTL64(hash.h3, 16);
+      hash.h1 ^= (v1 + v2 + v3 + v4) ^ hash.h3;
       hash.h2 = xxxe(hash.h2, v2, v3, BC1, hash.h3 ^ v1, v4, BC3);
       return hash;
 }
@@ -477,7 +477,7 @@ fh128_step32(u192_t hash, const uint64_t block[4])
       v4 = xxxa(hash.h2, block[3], BC4, block[0], BC8);
       hash.h3 = xxxd(v3, v1, BC6, hash.h3 ^ v4, v2, BC7);
       hash.h3 = ROTL64(hash.h3, 16) * BCD;
-      hash.h1 = ((v1 + v2 + ROTL64(hash.h1, 16)) * BC5) ^ ((v3 + v4 + hash.h3) * BC8);
+      hash.h1 ^= (v1 + v2 + v3 + v4) ^ hash.h3;
       hash.h2 = xxxe(hash.h3, v2, v3, BC1, hash.h2 ^ v1, v4, BC3);
       return hash;
 }
@@ -490,7 +490,7 @@ fh128_step16(u192_t hash, const uint64_t block[2])
       v2 = xxxa(hash.h2, block[1], BC3, block[0], BC4);
       hash.h3 = xxxd(hash.h3 ^ v1, v2, BC7, v2, v1, BC8);
       hash.h3 = ROTL64(hash.h3, 16) * BCD;
-      hash.h1 ^= hash.h3 ^ (v1 + v2);
+      hash.h1 ^= (v1 + v2) ^ hash.h3;
       hash.h2 = xxxd(hash.h2, v1, BC1, hash.h3, v2, BC3);
       return hash;
 }
@@ -498,9 +498,11 @@ fh128_step16(u192_t hash, const uint64_t block[2])
 static inline u192_t
 fh128_step8(u192_t hash, const uint64_t block[1])
 {
-      hash.h3 = xxxc(hash.h1, block[0], BC1, hash.h3, block[0], BC3);
-      hash.h1 += hash.h3;
-      hash.h3 = ROTL64(hash.h3, 16) * BCD;
+      uint64_t v1, v2;
+      v1 = (hash.h3 ^ block[0]) * BC3;
+      v2 = (hash.h1 ^ ROTL64(block[0], 32)) * BC1;
+      hash.h3 = ROTL64(v1 + v2, 16) * BCD;
+      hash.h1 = (v1 ^ v2) ^ hash.h3;
       hash.h2 = xxxd(hash.h2, block[0], BC2, block[0], hash.h3, BC4);
       return hash;
 }
