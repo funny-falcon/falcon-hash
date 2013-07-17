@@ -415,14 +415,18 @@ typedef struct u256 {
 #define R32(a) ROTL64((a), 32)
 #define R31(a) ROTL64((a), 31)
 #define R29(a) ROTL64((a), 29)
+#define R24(a) ROTL64((a), 24)
+#define R23(a) ROTL64((a), 23)
 #define R16(a) ROTL64((a), 16)
 #define R48(a) ROTL64((a), 48)
 #define R1(a) ROTL64((a), 1)
 #define R8(a) ROTL64((a), 8)
+#define R56(a) ROTL64((a), 56)
 #define X2M(a, b, m) (((a)^(b))*m)
 #define X2R32M(a, b, m) (R32((a)^(b))*m)
 #define R32X2M(a, b, m) ((R32(a)^(b))*m)
 #define X3M(a, b, c, m) (((a)^(b)^(c))*m)
+#define X2P(a, b, m) (((a)^(b))+(m))
 
 
 static inline u256_t
@@ -482,19 +486,31 @@ _Dragon128_x64(u256_t hash, const void *key, int len)
     hash.h1 -= i; hash.h2 += i;
     if (i >= 0 && i <= 8) {
         block[0] = mem8cpy64((const uint8_t*)chunk, i);
-        hash = d128_step32(hash, block);
+        hash = d128_step8(hash, block);
     } else if (i >= 9 && i <= 16) {
         mem16cpy64(block, (const uint8_t*)chunk, i);
-        hash = d128_step32(hash, block);
+        hash = d128_step16(hash, block);
     } else if (i >= 17 && i <= 32) {
         mem16cpy64(block, (const uint8_t*)chunk, 16);
         mem16cpy64(block+2, (const uint8_t*)(chunk + 2), i - 16);
         hash = d128_step32(hash, block);
     }
+#if 0
     t.h1 = (R32(hash.h1) ^ R16(hash.h3)) * BC9;
     t.h2 = (R32(hash.h2) ^ R16(hash.h4)) * BCA;
     t.h3 = (R32(hash.h3) ^ R16(hash.h1)) * BCB;
     t.h4 = (R32(hash.h4) ^ R16(hash.h2)) * BCC;
+#elif 0
+    t.h1 = R24(X2P(hash.h1, hash.h2, R56(hash.h3))) * BC9;
+    t.h2 = R24(X2P(hash.h2, hash.h3, R56(hash.h4))) * BCA;
+    t.h3 = R24(X2P(hash.h3, hash.h4, R56(hash.h1))) * BCB;
+    t.h4 = R24(X2P(hash.h4, hash.h1, R56(hash.h2))) * BCC;
+#else
+    t.h1 = R24(hash.h1 ^ hash.h2) * BC9;
+    t.h2 = R24(hash.h2 ^ hash.h3) * BCA;
+    t.h3 = R24(hash.h3 ^ hash.h4) * BCB;
+    t.h4 = R24(hash.h4 ^ hash.h1) * BCC;
+#endif
     return t;
 }
 
@@ -509,8 +525,10 @@ Dragon128_x64(const void *key, int len, void *seed, void *out)
     };
     uint64_t r1, r2;
     hash = _Dragon128_x64(hash, key, len);
-    r1 = R32(hash.h1 ^ hash.h2) * BCF;
-    r2 = R32(hash.h3 ^ hash.h4) * BC0;
+    r1 = X2M(R16(hash.h1), R24(hash.h2), BCD) ^ 
+	 X2M(R24(hash.h3), R24(hash.h4), BCF);
+    r2 = X2M(R24(hash.h2), R16(hash.h3), BCE) ^
+       	 X2M(R24(hash.h1), R24(hash.h4), BC0);
     *(uint64_t*)out = r1;
     *((uint64_t*)out+1) = r2;
 }
