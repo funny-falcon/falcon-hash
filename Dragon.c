@@ -251,9 +251,9 @@ d64_step8(u128_t h, const uint32_t block[2])
 {
     u128_t t;
     t.h1 = x2m(block[0], h.h1, C1)+x2r16m(h.h4, block[0], C5);
-    t.h2 = x2m(block[0], h.h2, C2)^x2r16m(h.h1, block[1], C6);
-    t.h3 = x2m(block[1], h.h3, C3)+x2r16m(h.h2, block[1], C7);
-    t.h4 = x2m(block[1], h.h4, C4)^x2r16m(h.h3, block[0], C8);
+    t.h2 = x2m(block[1], h.h2, C2)+x2r16m(h.h1, block[1], C6);
+    t.h3 = x2m(block[0], h.h3, C3)+x2r16m(h.h2, block[1], C7);
+    t.h4 = x2m(block[1], h.h4, C4)+x2r16m(h.h3, block[0], C8);
     return t;
 }
 
@@ -262,8 +262,8 @@ d64_step4(u128_t h, const uint32_t block[1])
 {
     u128_t t;
     t.h1 = x2m(block[0], h.h1, C1);
-    t.h2 = x2m(r8(block[0]), h.h2, C2);
-    t.h3 = x2m(r16(block[0]), h.h3, C3);
+    t.h2 = x2m(r16(block[0]), h.h2, C2);
+    t.h3 = x2m(r8(block[0]), h.h3, C3);
     t.h4 = x2m(r24(block[0]), h.h4, C4);
     return t;
 }
@@ -435,9 +435,9 @@ static inline u256_t
 d128_step16(u256_t h, const uint64_t block[2])
 {
     u256_t t;
-    t.h1 = X2M(block[0], h.h1, BC1)^X2R32M(h.h4, block[0], BC5);
-    t.h2 = X2M(block[0], h.h2, BC2)+X2R32M(h.h1, block[1], BC6);
-    t.h3 = X2M(block[1], h.h3, BC3)^X2R32M(h.h2, block[1], BC7);
+    t.h1 = X2M(block[0], h.h1, BC1)+X2R32M(h.h4, block[0], BC5);
+    t.h2 = X2M(block[1], h.h2, BC2)+X2R32M(h.h1, block[1], BC6);
+    t.h3 = X2M(block[0], h.h3, BC3)+X2R32M(h.h2, block[1], BC7);
     t.h4 = X2M(block[1], h.h4, BC4)+X2R32M(h.h3, block[0], BC8);
     return t;
 }
@@ -447,8 +447,8 @@ d128_step8(u256_t h, const uint64_t block[2])
 {
     u256_t t;
     t.h1 = X2M(block[0], h.h1, BC1);
-    t.h2 = X2M(R16(block[0]), h.h2, BC2);
-    t.h3 = X2M(R32(block[0]), h.h3, BC3);
+    t.h2 = X2M(R32(block[0]), h.h2, BC2);
+    t.h3 = X2M(R16(block[0]), h.h3, BC3);
     t.h4 = X2M(R48(block[0]), h.h4, BC4);
     return t;
 }
@@ -543,7 +543,7 @@ Dragon64B_x64(const void *key, int len, void *seed, void *out)
 void
 Dragon128(const void *key, int len, uint32_t seed, void * out)
 {
-    uint64_t seedx[4] = {seed, seed, seed, seed};
+    uint64_t seedx[4] = {seed+1, seed+2, seed+3, seed+4};
     Dragon128_x64(key, len, seedx, out);
 }
 
