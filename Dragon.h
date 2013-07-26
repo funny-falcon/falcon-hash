@@ -31,6 +31,9 @@ extern "C" {
 
 #include <stdint.h>
 
+void Dragon64(const void *key, int len, uint32_t seed, void * out);
+void Dragon64_32_fast(const void *key, int len, uint32_t seed, void * out);
+void Dragon64_32_sec(const void *key, int len, uint32_t seed, void * out);
 void Dragon128(const void *key, int len, uint32_t seed, void * out);
 void Dragon128_64_fast(const void *key, int len, uint32_t seed, void * out);
 void Dragon128_64_sec(const void *key, int len, uint32_t seed, void * out);
